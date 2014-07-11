@@ -1,0 +1,12 @@
+---
+title: "Activity Monitor Data Analysis"
+author: "Stephen Kaluzny"
+date: "07/11/2014"
+output: html_document
+---
+
+## The Data
+```{r}
+activity <- read.csv(unz("activity.zip", file="activity.csv"))
+summary(activity)
+```
