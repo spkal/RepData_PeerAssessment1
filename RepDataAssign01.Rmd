@@ -7,6 +7,24 @@ output: html_document
 
 ## The Data
 ```{r}
-activity <- read.csv(unz("activity.zip", file="activity.csv"))
+require("dplyr")
+activity <- tbl_df(read.csv(unz("activity.zip", file="activity.csv"),
+    stringsAsFactors = FALSE))
+activity$date <- as.Date(activity$date)
 summary(activity)
 ```
+
+## Steps Per Day
+```{r}
+activity_by_date <- group_by(activity, date)
+steps_per_day <- summarise(activity_by_date, total=sum(steps, na.rm=TRUE))
+hist(steps_per_day$total)
+```
+
+## Steps By Interval
+```{r}
+activity_by_interval <- group_by(activity, interval)
+interval_average <- summarise(activity_by_interval, ave=mean(steps, na.rm=TRUE))
+with(interval_average, plot(interval, ave, type='l'))
+```
+
