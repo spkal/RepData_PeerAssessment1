@@ -28,3 +28,20 @@ interval_average <- summarise(activity_by_interval, ave=mean(steps, na.rm=TRUE))
 with(interval_average, plot(interval, ave, type='l'))
 ```
 
+## Missing Values
+```{r}
+nonmissing_per_day <- summarise(activity_by_date, nonmissing=sum(!is.na(steps)))
+```
+
+```{r}
+indxMissi
+```
+
+```{r}
+indxMissingSteps <- which(is.na(activity$steps))
+activityImputed <- activity
+indxInterval <- match(activity[indxMissingSteps, "interval"],
+    interval_average[, "interval"])
+activityImputed[indxMissingSteps, "steps"] <-
+    interval_average[indxInterval, "ave"]
+```
