@@ -15,33 +15,48 @@ summary(activity)
 ```
 
 ## Steps Per Day
+We sum the number of steps for each day. 
 ```{r}
+require("ggplot2")
 activity_by_date <- group_by(activity, date)
-steps_per_day <- summarise(activity_by_date, total=sum(steps, na.rm=TRUE))
-hist(steps_per_day$total)
+steps_per_day <- summarise(activity_by_date, total_steps=sum(steps, na.rm=TRUE))
+hist(steps_per_day$total_steps)
+ggplot(steps_per_day, aes(x=total_steps)) + geom_histogram()
+mean(steps_per_day$total_steps)  # mean steps per day
+median(steps_per_day$total_steps)  # median steps per day
 ```
 
 ## Steps By Interval
 ```{r}
 activity_by_interval <- group_by(activity, interval)
-interval_average <- summarise(activity_by_interval, ave=mean(steps, na.rm=TRUE))
+interval_average <- summarise(activity_by_interval, ave=mean(steps, na.rm=TRUE),
+    med=median(steps, na.rm=TRUE))
 with(interval_average, plot(interval, ave, type='l'))
 ```
 
 ## Missing Values
+
 ```{r}
 nonmissing_per_day <- summarise(activity_by_date, nonmissing=sum(!is.na(steps)))
 ```
+We will replace any missing value with the mean value across all days for the same
+time interval value.
 
-```{r}
-indxMissi
-```
-
+Get the index (row number) where `steps` is missing.
+Match the value of `interval` for theses missing rows with the value of `interval`
+in the `interval_average` data frame.
+Use the match index value to get the mean step value value to use in place of the
+missing value.
 ```{r}
 indxMissingSteps <- which(is.na(activity$steps))
-activityImputed <- activity
+activity_ imputed <- activity
 indxInterval <- match(activity[indxMissingSteps, "interval"],
-    interval_average[, "interval"])
-activityImputed[indxMissingSteps, "steps"] <-
+    `[, "interval"])
+activity_imputed[indxMissingSteps, "steps"] <-
     interval_average[indxInterval, "ave"]
 ```
+
+```{r}
+table(activity$date[indxMissingSteps])
+```
+
