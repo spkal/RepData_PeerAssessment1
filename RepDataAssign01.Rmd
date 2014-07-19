@@ -20,42 +20,50 @@ We sum the number of steps for each day.
 require("ggplot2")
 activity_by_date <- group_by(activity, date)
 steps_per_day <- summarise(activity_by_date, total_steps=sum(steps, na.rm=TRUE))
-hist(steps_per_day$total_steps)
-ggplot(steps_per_day, aes(x=total_steps)) + geom_histogram()
-mean(steps_per_day$total_steps)  # mean steps per day
-median(steps_per_day$total_steps)  # median steps per day
+# hist(steps_per_day$total_steps)
+ggplot(steps_per_day, aes(x=total_steps)) + geom_histogram() +
+    xlab("Total Number of Steps Per Day")
+mean_steps_per_day <- mean(steps_per_day$total_steps)  # mean steps per day
+median_steps_per_day <- median(steps_per_day$total_steps)  # median steps per day
 ```
+The mean number of steps per day is `r format(mean_steps_per_day)`
+and the median number of steps per day is
+`r format(median_steps_per_day)`.
 
 ## Steps By Interval
 ```{r}
 activity_by_interval <- group_by(activity, interval)
 interval_average <- summarise(activity_by_interval, ave=mean(steps, na.rm=TRUE),
     med=median(steps, na.rm=TRUE))
-with(interval_average, plot(interval, ave, type='l'))
+ggplot(interval_average, aes(x=interval, y=ave)) +
+    geom_line() +
+    xlab("interval during a day") +
+    ylab("Average Number of Steps")
 ```
 
 ## Missing Values
 
 ```{r}
-nonmissing_steps_per_day <- summarise(activity_by_date, nonmissing=sum(!is.na(steps)))
-nonmissing_steps_per_day 
+nonmissing_steps_per_day <- summarise(activity_by_date,
+    nonmissing=sum(!is.na(steps)))
+table(nonmissing_steps_per_day$nonmissing)
 ```
-We will replace any missing value with the mean value across all days for the same
-time interval value.
+
+The missing values occur only in the `steps` variable:
+Missing date values: `r sum(is.na(activity$date))`,
+missing interval values: `r sum(is.na(activity$interval))`,
+missing steps values: `r sum(is.na(activity$steps))`,
+
+We will replace any missing value in `steps` with the mean value
+for `steps` across all days for the same time interval value.
 
 Get the index (row number) where `steps` is missing.
-Match the value of `interval` for theses missing rows with the value of `interval`
-in the `interval_average` data frame.
-Use the match index value to get the mean step value value to use in place of the
-missing value.
+Match the value of `interval` for theses missing rows
+with the value of `interval` in the `interval_average` data frame.
+Use the match index value to get the mean step value value to use
+in place of the missing value.
 ```{r}
-indxMissingDate <- which(is.na(activity$date))
-indexMissingInterval <- which(is.na(activity$interval))
 indxMissingSteps <- which(is.na(activity$steps))
-# Number of missing values for each variable:
-c(missingData=length(indxMissingDate),
-  missingInterval=length(indexMissingInterval),
-  missingSteps=length(indxMissingSteps))
 activity_imputed <- activity
 indxInterval <- match(activity[indxMissingSteps, "interval"],
    interval_average[, "interval"])
@@ -65,11 +73,24 @@ activity_imputed_by_date <- group_by(activity_imputed, date)
 steps_imputed_per_day <- summarise(activity_imputed_by_date,
     total_steps=sum(steps, na.rm=TRUE))
 ggplot(steps_imputed_per_day, aes(x=total_steps)) + geom_histogram()
-mean(steps_imputed_per_day$total_steps)  # mean imputed steps per day 
-median(steps_imputed_per_day$total_steps)  # median imputed steps per day
+imputed_mean_steps_per_day <- mean(steps_imputed_per_day$total_steps)
+imputed_median_steps_per_day <- median(steps_imputed_per_day$total_steps)
 ```
+The mean number of steps per day with imputed data is
+`r format(imputed_mean_steps_per_day)`.
+and the median number of steps per day with imputed data is
+`r format(imputed_median_steps_per_day)`.
 
+## Weekday Versus Weekend
 ```{r}
-table(activity$date[indxMissingSteps])
+activity_imputed$daytype <- ifelse(weekdays(activity_imputed$date) %in%
+    c("Saturday", "Sunday"), "weekend", "weekday")
+table(activity_imputed$daytype)
 ```
-
+```{r}
+activity_imputed_by_interval_daytype <- group_by(activity_imputed, interval, daytype)
+interval_average_by_daytype <- summarise(activity_imputed_by_interval_daytype, ave=mean(steps, na.rm=TRUE))
+ggplot(interval_average_by_daytype, aes(x=interval, y=ave)) +
+    geom_line() +
+    facet_grid(daytype ~ .)
+```
